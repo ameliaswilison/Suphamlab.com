@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sư Phạm Lab Pro - Nhóm 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS SYSTEM --- */
+        :root{--chalk:#ecf0f1;--green:#274e13;--wood:#5d4037;--paper:#fffdf0;--ink:#2c3e50;--red:#c0392b;--ok:#27ae60;--box-bg:#e8f6f3;--box-bd:#1abc9c}
+        body{font-family:'Patrick Hand',cursive;background:#e0d4b4 radial-gradient(#bcaaa4 1px,transparent 1px) 0 0/20px 20px;margin:0;color:var(--ink);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+        
+        /* SCENE */
+        .scene{position:fixed;bottom:-10px;left:0;width:100%;height:200px;z-index:999;pointer-events:none;display:flex;justify-content:center;align-items:flex-end;gap:30px}
+        .svg-s{width:120px;height:150px;filter:drop-shadow(0 5px 5px #0003)}
+        .head{transform-origin:50% 60px;animation:bob 3s infinite ease-in-out}
+        .arm{transform-origin:80px 90px;animation:wave 2s infinite ease-in-out}
+        @keyframes bob{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+        @keyframes wave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(20deg)}}
+        
+        /* PAGES */
+        .page{display:none;width:100%;max-width:900px;margin:0 auto;padding:20px;padding-bottom:200px;animation:in .4s ease-out}
+        .page.active{display:block}
+        @keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        
+        /* UI ELEMENTS */
+        .board{background:var(--green);border:15px solid var(--wood);border-radius:10px;padding:60px 40px;box-shadow:0 10px 30px #0005;color:var(--chalk);text-align:center}
+        .btn-start{background:#f1c40f;color:#333;padding:15px 60px;font:700 1.5em 'Patrick Hand';border:none;border-radius:5px;cursor:pointer;box-shadow:0 5px 0 #c29d0b;transition:.1s;pointer-events:auto;margin-top:30px}
+        .btn-start:active{transform:translateY(5px);box-shadow:none}
+        .head-p{background:#fff;padding:15px 30px;border:1px solid #ccc;box-shadow:0 2px 5px #0001;transform:rotate(-1deg);display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;font-family:'Roboto'}
+        .nav-btn{background:var(--wood);color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font:1.2em 'Patrick Hand'}
+        
+        /* MENU GRID */
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:25px;padding-bottom:40px;border-bottom:15px solid #8d6e63}
+        .book{height:220px;background:#fff;border-radius:5px 15px 15px 5px;box-shadow:5px 5px 15px #0003;cursor:pointer;transition:.3s;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:15px;border-left:10px solid #0001}
+        .book:hover{transform:translateY(-10px) rotate(2deg);z-index:10}
+        
+        .bk-skill{background:#3498db;color:#fff;border-left-color:#2980b9}
+        .bk-att{background:#e74c3c;color:#fff;border-left-color:#c0392b} 
+        .bk-soc{background:#9b59b6;color:#fff;border-left-color:#8e44ad}
+        .bk-psy{background:#e67e22;color:#fff;border-left-color:#d35400}
+        .bk-multi{background:#16a085;color:#fff;border-left-color:#1abc9c}
+        
+        /* THEORY CONTENT STYLE */
+        .t-content{background:#fff;padding:40px;box-shadow:0 0 20px #0001;border-radius:5px;font-family:'Roboto';line-height:1.6;color:#333}
+        .th1{color:var(--red);font:2em 'Patrick Hand';margin:30px 0 10px;border-bottom:2px dashed #ccc}
+        .th2{color:#2980b9;font-size:1.4em;margin-top:25px;font-weight:700}
+        .abox{background:var(--box-bg);border-left:5px solid var(--box-bd);padding:20px;margin:15px 0;border-radius:0 5px 5px 0}
+        .abox b{color:var(--box-bd);display:block;margin-bottom:5px;text-transform:uppercase;font-size:.9em}
+        ul{padding-left:20px} li{margin-bottom:8px}
+
+        /* QUIZ STYLE */
+        .note{background:var(--paper);width:100%;min-height:500px;box-shadow:0 0 20px #0001;position:relative;padding:40px 40px 40px 60px;background-image:linear-gradient(#999 1px,transparent 1px);background-size:100% 30px}
+        .note::before{content:'';position:absolute;top:0;bottom:0;left:40px;width:2px;background:#e74c3c;opacity:.5}
+        .btn-opt{width:100%;padding:15px;margin-bottom:10px;background:#fff;border:2px solid #555;border-radius:10px;text-align:left;font:1em 'Roboto';cursor:pointer;display:flex;align-items:flex-start;transition:0.2s}
+        .btn-opt:hover:not(:disabled){background:#f0f3f4;transform:translateX(5px)}
+        
+        .btn-opt.wrong { background: #fdedec; border-color: var(--red); color: var(--red); animation: shake 0.4s; }
+        .btn-opt.correct { background: #d5f5e3; border-color: var(--ok); color: #145a32; font-weight: bold; }
+        
+        .ltr{background:#333;color:#fff;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;margin-right:15px;flex-shrink:0;font-weight:700}
+        
+        .feedback{background:#e8f8f5; border: 1px solid #a2d9ce; margin-top:20px;padding:20px;border-radius:10px;display:none; font-family:'Roboto'; font-size: 0.95em;}
+        .fb-item { margin-bottom: 8px; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+        .tag-ok { color: var(--ok); font-weight: bold; }
+        .tag-no { color: var(--red); font-weight: bold; }
+        
+        .acts{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+        .act-btn{padding:10px 25px;border-radius:5px;border:none;font:1.3em 'Patrick Hand';cursor:pointer;display:none;color:#fff}
+        .b-next{background:var(--ink)}
+        
+        .sticker{position:absolute;top:-10px;right:20px;background:#f39c12;color:#fff;padding:5px 15px;transform:rotate(3deg);box-shadow:0 2px 5px #0002;font:1.2em 'Patrick Hand';z-index:5}
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        
+        /* SPLIT MENU STYLE */
+        .split-menu { display: flex; gap: 20px; justify-content: center; margin-top: 40px; }
+        .split-card { width: 45%; padding: 40px; background: white; border-radius: 15px; text-align: center; cursor: pointer; box-shadow: 0 5px 15px #0002; transition: 0.3s; border: 2px solid #eee; }
+        .split-card:hover { transform: translateY(-10px); border-color: var(--ink); }
+        .split-icon { font-size: 4em; display: block; margin-bottom: 10px; }
+        .split-title { font-size: 1.8em; font-weight: bold; color: var(--ink); }
+        
+        /* GENERAL THEORY CARDS */
+        .theory-menu{display:flex;flex-direction:column;gap:20px}
+        .t-card{background:#fff;border-radius:10px;padding:25px;box-shadow:0 4px 10px #0001;cursor:pointer;border-left:8px solid #333;transition:.2s;display:flex;justify-content:space-between;align-items:center}
+        .t-card:hover{transform:translateX(10px);box-shadow:0 6px 15px #0002}
+        .tc-1{border-left-color:#e74c3c} .tc-2{border-left-color:#3498db} .tc-3{border-left-color:#f1c40f}
+        
+        /* FOOTER CREDITS */
+        .credits { margin-top: 30px; font-size: 0.9em; color: rgba(255,255,255,0.7); font-family: 'Roboto', sans-serif; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="scene" id="anim-scene">
+    <div class="svg-s"><svg viewBox="0 0 120 150"><path d="M30,150 L30,100 Q30,80 60,80 Q90,80 90,100 L90,150 Z" fill="#3498db" stroke="#333" stroke-width="3"/><g class="arm"><path d="M80,90 Q110,60 110,30" fill="none" stroke="#f1c40f" stroke-width="12" stroke-linecap="round"/><circle cx="110" cy="30" r="10" fill="#f1c40f" stroke="#333" stroke-width="2"/></g><g class="head"><circle cx="60" cy="60" r="30" fill="#f1c40f" stroke="#333" stroke-width="3"/><path d="M45,55 Q50,65 60,55 Q70,65 75,55" fill="none" stroke="#333" stroke-width="2" opacity=".6"/><path d="M50,75 Q60,85 70,75" fill="none" stroke="#333" stroke-width="2"/></g></svg></div>
+    <div class="svg-s"><svg viewBox="0 0 120 150"><path d="M30,150 L30,100 Q30,80 60,80 Q90,80 90,100 L90,150 Z" fill="#e74c3c" stroke="#333" stroke-width="3"/><g class="head"><path d="M20,60 Q60,10 100,60 L100,100 L20,100 Z" fill="#2c3e50"/><circle cx="60" cy="60" r="30" fill="#f1c40f" stroke="#333" stroke-width="3"/><path d="M55,70 Q60,75 65,70" fill="none" stroke="#333" stroke-width="2"/></g></svg></div>
+</div>
+
+<div id="p-landing" class="page active">
+    <div class="board">
+        <h1 style="font-size:4.5em;margin:0">SƯ PHẠM LAB</h1>
+        <p style="font-size:1.5em;color:#ccc">Hệ thống Thực hành & Lý thuyết Sư phạm</p>
+        <button class="btn-start" onclick="go('p-menu')">VÀO LỚP NGAY ➔</button>
+        
+        <div class="credits">
+            Sản phẩm của nhóm 1_ Tư Duy Sáng Tạo Khởi Nghiệp<br>
+            Mã lớp: FLF1009 25
+        </div>
+    </div>
+</div>
+
+<div id="p-menu" class="page">
+    <div class="head-p"><h2>🗂️ Chọn Chủ đề học tập</h2><button class="nav-btn" onclick="go('p-landing')">Trang chủ</button></div>
+    <div class="grid">
+        <div class="book bk-theory" onclick="go('p-general-theory-menu')">
+            <div style="font-size:3em">📚</div>
+            <b>LÝ THUYẾT<br>NỀN TẢNG</b>
+        </div>
+        <div class="book bk-skill" onclick="selectTopic('teaching')">
+            <div style="font-size:3em">🧠</div>
+            <b>KỸ NĂNG<br>GIẢNG DẠY</b>
+        </div>
+        <div class="book bk-att" onclick="selectTopic('discipline')">
+            <div style="font-size:3em">😤</div>
+            <b>XỬ LÝ<br>KỶ LUẬT</b>
+        </div>
+        <div class="book bk-soc" onclick="selectTopic('social')">
+            <div style="font-size:3em">🤝</div>
+            <b>KỸ NĂNG<br>XÃ HỘI</b>
+        </div>
+        <div class="book bk-psy" onclick="selectTopic('psychology')">
+            <div style="font-size:3em">❤️</div>
+            <b>TÂM LÝ<br>HỌC ĐƯỜNG</b>
+        </div>
+        <div class="book bk-multi" onclick="selectTopic('multi')">
+            <div style="font-size:3em">🌏</div>
+            <b>LỚP HỌC<br>ĐA VĂN HÓA</b>
+        </div>
+    </div>
+</div>
+
+<div id="p-general-theory-menu" class="page">
+    <div class="head-p"><h2>📚 Lý thuyết Nền tảng</h2><button class="nav-btn" onclick="go('p-menu')">Quay lại</button></div>
+    <div class="theory-menu">
+        <div class="t-card tc-1" onclick="openGeneralTheory(1)"><div style="font-size:2.5em;margin-right:20px">👶</div><div><h3>Nhóm 1: Tâm lý lứa tuổi</h3><p>Piaget, Erikson, đặc điểm cấp học</p></div></div>
+        <div class="t-card tc-2" onclick="openGeneralTheory(2)"><div style="font-size:2.5em;margin-right:20px">🛠️</div><div><h3>Nhóm 2: Phương pháp dạy</h3><p>ZPD, Đa trí tuệ, Phân hóa</p></div></div>
+        <div class="t-card tc-3" onclick="openGeneralTheory(3)"><div style="font-size:2.5em;margin-right:20px">🧘</div><div><h3>Nhóm 3: Quản lý cảm xúc</h3><p>EQ, Burnout, Kích động-Phản ứng</p></div></div>
+    </div>
+</div>
+
+<div id="p-general-theory-content" class="page">
+    <div class="head-p"><h2 id="gt-title">Nội dung</h2><button class="nav-btn" onclick="go('p-general-theory-menu')">Quay lại</button></div>
+    <div class="t-content" id="gt-body"></div>
+</div>
+
+<div id="p-split" class="page">
+    <div class="head-p"><h2 id="split-header-text">Chủ đề...</h2><button class="nav-btn" onclick="go('p-menu')">Quay lại</button></div>
+    <div class="split-menu">
+        <div class="split-card" onclick="openTopicTheory()">
+            <span class="split-icon">📖</span>
+            <div class="split-title">LÝ THUYẾT</div>
+            <p>Kiến thức chuyên đề</p>
+        </div>
+        <div class="split-card" onclick="startQuiz()">
+            <span class="split-icon">🎮</span>
+            <div class="split-title">THỰC HÀNH</div>
+            <p>20 Tình huống trắc nghiệm</p>
+        </div>
+    </div>
+</div>
+
+<div id="p-topic-theory" class="page">
+    <div class="head-p"><h2>📖 Lý thuyết Chuyên đề</h2><button class="nav-btn" onclick="go('p-split')">Quay lại</button></div>
+    <div class="t-content" id="topic-theory-content"></div>
+</div>
+
+<div id="p-quiz" class="page">
+    <div class="head-p"><button class="nav-btn" onclick="go('p-split')">⬅ Thoát</button><h3 style="margin:0;font-family:'Patrick Hand'">Thực hành Tình huống</h3></div>
+    <div class="note">
+        <span id="q-tag" class="sticker">Câu hỏi</span>
+        <h2 id="q-title" style="margin-top:0;color:#2c3e50">Loading...</h2>
+        <div id="q-opts"></div>
+        <div id="q-fb" class="feedback"></div>
+        <div class="acts">
+            <button id="b-ne" class="act-btn b-next" onclick="nextQ()">Tiếp theo ➜</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===================== DATA: GENERAL THEORY =====================
+    const generalTheoryData = {
+        1: `
+            <div class="th1">1. Giới Thiệu</div>
+            <p>Hiểu biết về tâm lý lứa tuổi là “nền tảng sống còn’’ để thiết kế hoạt động giảng dạy. Gia sư cần thấu hiểu đặc điểm tâm-sinh-lý từng giai đoạn.</p>
+            <div class="th2">a. Thuyết Phát triển Nhận thức (Jean Piaget)</div> [attachment_0](attachment)
+            <ul>
+                <li><strong>Giác quan - Vận động (0-2t):</strong> Hiểu qua cảm giác/vận động.</li>
+                <li><strong>Tiền thao tác (2-7t):</strong> Tư duy tự kỷ trung tâm, ngôn ngữ phát triển.</li>
+                <li><strong>Thao tác cụ thể (7-11t):</strong> Tư duy logic với vật thể cụ thể.</li>
+                <li><strong>Thao tác hình thức (12+):</strong> Tư duy trừu tượng, giả định.</li>
+            </ul>
+            <div class="abox"><b>💡 Ứng dụng:</b> Tiểu học dùng học liệu trực quan. THCS/THPT dùng câu hỏi mở, tư duy phản biện.</div>
+            <div class="th2">b. Thuyết Tâm lý Xã hội (Erik Erikson)</div>
+            <ul>
+                <li><strong>Tiểu học (Cần cù vs Tự ti):</strong> Cần được khen ngợi để chăm chỉ. Tránh chê bai gây tự ti.</li>
+                <li><strong>Vị thành niên (Nhận dạng vs Hỗn loạn):</strong> Tìm kiếm "Tôi là ai?", dễ nổi loạn.</li>
+            </ul>
+            <div class="abox"><b>💡 Ứng dụng:</b> Rèn kỹ năng khen thưởng cụ thể. Tôn trọng ý kiến khác biệt, định hướng thay vì áp đặt.</div>
+            <div class="th2">c. Đặc điểm theo cấp học</div>
+            <ul>
+                <li><strong>Tiểu học:</strong> Dễ xúc động, nhớ máy móc. -> Kịch bản ngắn gọn, vui vẻ.</li>
+                <li><strong>THCS ("Tuổi bão tố"):</strong> Nhạy cảm, cái tôi lớn. -> Quan hệ tôn trọng, tránh đối đầu.</li>
+                <li><strong>THPT:</strong> Lo lắng tương lai. -> Vai trò người dẫn dắt, chia sẻ.</li>
+            </ul>
+        `,
+        2: `
+            <div class="th1">1. Giới Thiệu</div>
+            <p>Phương pháp giảng dạy là cầu nối. Phương pháp phù hợp khơi dậy đam mê, phương pháp cứng nhắc giết chết sáng tạo.</p>
+            <div class="th2">a. Vùng Phát triển Gần (ZPD) - Lev Vygotsky</div> [attachment_1](attachment)
+            <p>Khoảng cách giữa việc trẻ tự làm và việc trẻ làm được khi có hướng dẫn.</p>
+            <div class="abox"><b>💡 Ứng dụng:</b> Chẩn đoán ZPD, đưa ra "giàn giáo" (scaffolding) và câu hỏi gợi mở. Không làm hộ, không bỏ mặc.</div>
+            <div class="th2">b. Thuyết Đa Trí Tuệ (Howard Gardner)</div>
+            <p>Trí thông minh đa dạng: Ngôn ngữ, Logic, Không gian, Vận động, Âm nhạc, Tương tác, Nội tâm, Tự nhiên.</p>
+            <div class="abox"><b>💡 Ứng dụng:</b> Đa dạng hóa hoạt động (trò chơi, sơ đồ, âm nhạc) để tiếp cận mọi học sinh.</div>
+            <div class="th2">c. Dạy Học Phân Hóa</div>
+            <p>Điều chỉnh nội dung, quy trình để đáp ứng sự đa dạng.</p>
+            <div class="abox"><b>💡 Ứng dụng:</b> Trong nhóm, chia nhiệm vụ độ khó khác nhau để HS giỏi không chán, HS yếu không nản.</div>
+        `,
+        3: `
+            <div class="th1">1. Giới Thiệu</div>
+            <p>Quản lý cảm xúc để tránh kiệt sức (burnout) và đưa ra quyết định sáng suốt.</p>
+            <div class="th2">a. Trí Tuệ Cảm Xúc (EQ) - Daniel Goleman</div>
+            <ul><li>Tự nhận thức</li><li>Tự quản lý</li><li>Nhận thức xã hội</li><li>Quản lý mối quan hệ</li></ul>
+            <div class="abox"><b>💡 Ứng dụng:</b> Nhận diện cơn giận. Dùng kỹ thuật "Dừng lại - Thở - Suy nghĩ" trước khi phản ứng.</div>
+            <div class="th2">b. Mô hình Kích động - Đánh giá - Hành động</div>
+            <p>Giữa Kích thích và Phản ứng có sự Đánh giá. Thay đổi đánh giá (Appraisal) sẽ thay đổi phản ứng.</p>
+            <div class="abox"><b>💡 Ứng dụng:</b> Tự hỏi "Hành vi này do đâu?" (Bài chán hay em buồn?) để chuyển từ trừng phạt sang thấu hiểu.</div>
+            <div class="th2">c. Sự Kiệt Sức (Burnout)</div>
+            <div class="abox"><b>💡 Ứng dụng:</b> Thiết lập ranh giới lành mạnh với phụ huynh/công việc. Tự chăm sóc bản thân.</div>
+        `
+    };
+
+    // ===================== DATA: TEACHING SKILLS =====================
+    const teachingData = {
+        title: "Kỹ năng Giảng dạy",
+        theory: `
+            <div class="th1">Kỹ năng giảng dạy là gì?</div>
+            <p>Là kiến thức, năng lực và phẩm chất giúp định hướng, khuyến khích học sinh. Kết hợp giữa <strong>Kỹ năng Cứng</strong> (chuyên môn, công nghệ, soạn bài) và <strong>Kỹ năng Mềm</strong> (giao tiếp, thấu cảm, tổ chức).</p>
+            
+            <div class="th2">Các kỹ năng cốt lõi</div>
+            <div class="abox">
+                <b>1. Giao tiếp:</b> Truyền đạt rõ ràng. Xây dựng quan hệ với HS, phụ huynh, đồng nghiệp.<br>
+                <b>2. Quản lý thời gian & Tổ chức:</b> Hoàn thành nhiệm vụ đúng hạn. Quản lý nguồn lực.<br>
+                <b>3. Giải quyết vấn đề:</b> Tìm giải pháp sáng tạo (VD: Dùng hình ảnh khi HS không hiểu bài).<br>
+                <b>4. Lập kế hoạch:</b> Bao quát chương trình, chọn phương pháp phù hợp.<br>
+                <b>5. Kỹ năng môn học:</b> Nắm vững kiến thức chuyên môn sâu.
+            </div>
+
+            <div class="th2">Quản lý lớp học</div>
+            <ul>
+                <li>Tối đa hóa việc học.</li>
+                <li>Giải quyết mất trật tự theo hướng xây dựng.</li>
+                <li>Duy trì hứng thú.</li>
+                <li>Thúc đẩy hòa nhập.</li>
+            </ul>
+        `,
+        questions: [
+            {q:"1. Trong hoạt động khởi động, một số HS không hứng thú. Cách tốt nhất?", opts:[{t:"A. Tăng phần thưởng",c:false,f:"Động lực ngoại lai không bền."},{t:"B. Ép tất cả phải trả lời",c:false,f:"Giảm an toàn tâm lý."},{t:"C. Dùng tình huống thực tiễn, gần gũi",c:true,f:"Tạo ý nghĩa, tăng hứng thú nội tại."},{t:"D. Bắt đầu bằng câu khó",c:false,f:"Gây căng thẳng."}]},
+            {q:"2. Kiểm tra nhanh mức độ hiểu của cả lớp?", opts:[{t:"A. Gọi ngẫu nhiên 1-2 em",c:false,f:"Không đại diện cả lớp."},{t:"B. Dùng tín hiệu ngón tay hoặc bảng con",c:true,f:"Thu thập dữ liệu tức thời từ 100% HS."},{t:"C. Làm bài kiểm tra dài",c:false,f:"Mất thời gian."},{t:"D. Hỏi 'cả lớp hiểu chưa?'",c:false,f:"HS thường gật đầu theo thói quen."}]},
+            {q:"3. Mục tiêu học tập tốt theo định hướng năng lực cần?", opts:[{t:"A. Mô tả việc dạy của GV",c:false,f:"Sai đối tượng."},{t:"B. Mô tả hành động quan sát được của HS",c:true,f:"Cụ thể, đo lường được."},{t:"C. Ghi càng nhiều càng tốt",c:false,f:"Gây rối."},{t:"D. Viết chung chung",c:false,f:"Không đo lường được."}]},
+            {q:"4. HS mất tập trung do tâm lý. GV nên?", opts:[{t:"A. Nhắc trước lớp",c:false,f:"Gây xấu hổ."},{t:"B. Tìm hiểu nguyên nhân, hỗ trợ cá nhân",c:true,f:"Giải quyết gốc rễ, bảo vệ tâm lý."},{t:"C. Phạt đứng",c:false,f:"Phản tác dụng."},{t:"D. Bỏ mặc",c:false,f:"Vấn đề sẽ kéo dài."}]},
+            {q:"5. Hoạt động mở đầu hiệu quả nhất khi?", opts:[{t:"A. Không liên quan bài",c:false,f:"Làm loãng bài."},{t:"B. Quá khó",c:false,f:"Gây thất vọng."},{t:"C. Kích hoạt kiến thức nền, tạo nhu cầu",c:true,f:"Kết nối cái đã biết với cái mới."},{t:"D. Chỉ yêu cầu nghe",c:false,f:"Thụ động."}]},
+            {q:"6. Khi HS giảm tập trung, nên đổi hoạt động?", opts:[{t:"A. Nặng lý thuyết hơn",c:false,f:"Tăng tải nhận thức."},{t:"B. Tăng vận động, tăng tương tác",c:true,f:"Thay đổi trạng thái năng lượng."},{t:"C. Làm bài khó",c:false,f:"Gây nản."},{t:"D. La mắng",c:false,f:"Tiêu cực."}]},
+            {q:"7. Dạy học 'lấy người học làm trung tâm' là?", opts:[{t:"A. HS tự học hoàn toàn",c:false,f:"Sai bản chất."},{t:"B. GV giảng là chính",c:false,f:"Truyền thống."},{t:"C. HS tham gia, tự khám phá dưới sự hỗ trợ",c:true,f:"GV là người hướng dẫn."},{t:"D. GV không cần soạn bài",c:false,f:"Cần soạn kỹ hơn."}]},
+            {q:"8. Đánh giá năng lực nhóm cần?", opts:[{t:"A. Chỉ quan tâm sản phẩm",c:false,f:"Bỏ qua quá trình."},{t:"B. Phân tích tiến trình, vai trò, hợp tác",c:true,f:"Đánh giá toàn diện."},{t:"C. Dựa trên số lần phát biểu",c:false,f:"Không chính xác."},{t:"D. Cảm tính",c:false,f:"Mất công bằng."}]},
+            {q:"9. HS trả lời sai nhưng tư duy đúng hướng?", opts:[{t:"A. Bác bỏ ngay",c:false,f:"Mất tự tin."},{t:"B. Phạt",c:false,f:"Phản giáo dục."},{t:"C. Gợi mở để HS tự sửa",c:true,f:"Scaffolding - Hỗ trợ hoàn thiện."},{t:"D. Gọi bạn khác",c:false,f:"Mất cơ hội."}]},
+            {q:"10. Trình bày bảng rõ ràng để?", opts:[{t:"A. Tiết kiệm thời gian",c:false,f:"Chưa chắc."},{t:"B. Hệ thống hóa, giảm tải nhận thức",c:true,f:"Công cụ trực quan hóa tư duy."},{t:"C. Lớp im lặng",c:false,f:"Không liên quan."},{t:"D. Bắt buộc",c:false,f:"Không phải lý do chính."}]},
+            {q:"11. Nhóm làm việc kém hiệu quả. GV nên?", opts:[{t:"A. Làm thay",c:false,f:"HS ỷ lại."},{t:"B. Nhắc chung chung",c:false,f:"Không hiệu quả."},{t:"C. Hỗ trợ phân vai trò, gợi ý phương pháp",c:true,f:"Cung cấp cấu trúc vận hành."},{t:"D. Cho điểm kém",c:false,f:"Không giúp tiến bộ."}]},
+            {q:"12. Giao tiếp sư phạm cần?", opts:[{t:"A. Rõ ràng, ánh mắt, tốc độ phù hợp",c:true,f:"Truyền tải hiệu quả."},{t:"B. Nói thật nhanh",c:false,f:"HS không kịp hiểu."},{t:"C. Không phản hồi",c:false,f:"Mất tương tác."},{t:"D. Chỉ GV nói",c:false,f:"Độc thoại."}]},
+            {q:"13. Dạy lớp yếu, giáo án cần?", opts:[{t:"A. Linh hoạt, chia nhỏ, tăng hỗ trợ",c:true,f:"Dạy học phân hóa."},{t:"B. Giữ nguyên mức khó",c:false,f:"HS bỏ cuộc."},{t:"C. Dạy thật nhanh",c:false,f:"Hổng kiến thức."},{t:"D. Sao chép mạng",c:false,f:"Không phù hợp."}]},
+            {q:"14. Nội dung bài khó, cách hiệu quả?", opts:[{t:"A. Chia nhỏ, minh họa bằng ví dụ",c:true,f:"Giảm tải nhận thức."},{t:"B. Bỏ qua",c:false,f:"Hổng kiến thức."},{t:"C. Dạy nhanh",c:false,f:"Không hiểu."},{t:"D. Chỉ đọc SGK",c:false,f:"Nhàm chán."}]},
+            {q:"15. Khi khen học sinh, nên?", opts:[{t:"A. Khen cụ thể hành vi tốt",c:true,f:"Củng cố hành vi đúng."},{t:"B. Khen chung chung",c:false,f:"HS không rõ tốt chỗ nào."},{t:"C. Khen quá đà",c:false,f:"Thiếu chân thực."},{t:"D. Không khen",c:false,f:"Thiếu động lực."}]},
+            {q:"16. Lớp ồn khi đang dạy. Xử lý?", opts:[{t:"A. Hét lớn",c:false,f:"Tiêu cực."},{t:"B. Tạm dừng + tín hiệu quản lý",c:true,f:"Thiết lập lại trật tự nhẹ nhàng."},{t:"C. Phạt hàng loạt",c:false,f:"Mất công bằng."},{t:"D. Tiếp tục giảng",c:false,f:"Vô nghĩa."}]},
+            {q:"17. Cấu trúc tiết học hiệu quả?", opts:[{t:"A. Mở đầu - Kiến thức mới - Luyện tập - Vận dụng",c:true,f:"Quy trình phát triển năng lực."},{t:"B. Chỉ luyện tập",c:false,f:"Thiếu nền tảng."},{t:"C. Chỉ nghe giảng",c:false,f:"Thụ động."},{t:"D. Tùy hứng",c:false,f:"Thiếu mục tiêu."}]},
+            {q:"18. Phát triển tư duy phản biện bằng cách?", opts:[{t:"A. Khuyến khích đánh giá, lập luận",c:true,f:"Cốt lõi của Critical Thinking."},{t:"B. Chỉ học thuộc",c:false,f:"Tư duy bậc thấp."},{t:"C. Cấm thắc mắc",c:false,f:"Giết chết tư duy."},{t:"D. Làm trắc nghiệm",c:false,f:"Chưa đủ."}]},
+            {q:"19. Feedback hiệu quả cần?", opts:[{t:"A. Chỉ điểm tốt - điểm cần sửa - cách sửa",c:true,f:"Mang tính xây dựng."},{t:"B. Chỉ nêu lỗi",c:false,f:"Gây nản."},{t:"C. Chê trách",c:false,f:"Tiêu cực."},{t:"D. Chung chung",c:false,f:"Không biết đường sửa."}]},
+            {q:"20. HS nổi nóng. GV nên?", opts:[{t:"A. Bình tĩnh, lắng nghe, trao đổi riêng sau",c:true,f:"An toàn, tránh leo thang."},{t:"B. Tranh cãi lại",c:false,f:"Mất kiểm soát."},{t:"C. Phạt nặng ngay",c:false,f:"Gây phản kháng."},{t:"D. Gọi phụ huynh ngay",c:false,f:"Chưa cần thiết."}]}
+        ]
+    };
+
+    // --- 2. XỬ LÝ KỈ LUẬT (DISCIPLINE) ---
+    const disciplineData = {
+        title: "Xử lý Kỷ luật",
+        theory: `
+            <div class="th1">1. Định nghĩa & Tư duy</div>
+            <p>Xử lí kỉ luật là quy trình sư phạm để duy trì trật tự và giáo dục năng lực tự quản. <strong>Không phải trừng phạt.</strong> Mục tiêu là thay đổi hành vi.</p>
+            <div class="abox">
+                <b>Nguyên tắc cốt lõi:</b>
+                <ul>
+                    <li>Mục tiêu là giáo dục, không trả đũa.</li>
+                    <li>Hành vi xấu ≠ Học sinh xấu.</li>
+                    <li>Kỉ luật nhất quán – công bằng – dự đoán trước.</li>
+                </ul>
+            </div>
+
+            <div class="th1">2. Thách thức hiện nay</div>
+            <ul>
+                <li><strong>Lớp đông:</strong> Dễ lây lan hành vi, giáo viên quá tải.</li>
+                <li><strong>Đa dạng hành vi:</strong> ADHD, lo âu, sự can thiệp của phụ huynh.</li>
+                <li><strong>Áp lực:</strong> Sợ bị ghi hình, khiếu nại dẫn đến né tránh.</li>
+            </ul>
+
+            <div class="th1">3. Kỹ năng & Công cụ</div>
+            <div class="abox">
+                <b>Kỹ năng can thiệp:</b>
+                <br>Phân tầng: Nhắc nhở riêng -> Lựa chọn -> Phục hồi.
+                <br>Giao tiếp: Dùng "I-message" (Cô cảm thấy...) thay vì "You-message".
+                <br>Cảm xúc: Nhận diện trigger, kỹ thuật Dừng - Thở.
+            </div>
+            <div class="abox">
+                <b>Công cụ:</b>
+                Bộ quy tắc lớp rõ ràng. Sổ theo dõi hành vi khách quan.
+            </div>
+
+            <div class="th2" style="color:var(--red)">TUYỆT ĐỐI TRÁNH ❌</div>
+            <p style="background:#fff; padding:10px; border:1px solid var(--red); color:var(--red)">
+                - Xúc phạm danh dự, bêu tên.<br>
+                - Phạt thể xác/nhục hình.<br>
+                - Đuổi ra khỏi lớp ngay lập tức.<br>
+                - Trừng phạt tập thể vì lỗi cá nhân.<br>
+                - So sánh học sinh.
+            </p>
+        `,
+        questions: [
+            {q:"1. Lớp 50 HS, 1 nhóm nói chuyện. Lại gần thì ngừng, quay đi thì nói tiếp. Giải pháp?", opts:[{t:"A. Đứng cạnh lâu hơn",c:false,f:"Chỉ tạm thời."},{t:"B. Tạm dừng, nhắc quy tắc, cam kết lại",c:true,f:"Hiện tượng Compliance. Cần chuyển sang tự quản."},{t:"C. Gọi tên bắt trả lời",c:false,f:"Dễ gây đối đầu."},{t:"D. Chuyển chỗ ngay",c:false,f:"Biện pháp mạnh quá sớm."}]},
+            {q:"2. HS phản ứng: 'Em chỉ hỏi bài, cô bất công!'. Cả lớp chú ý.", opts:[{t:"A. Giải thích dài dòng",c:false,f:"Tranh luận quyền lực."},{t:"B. Bảo im và tiếp tục",c:false,f:"Gây ức chế."},{t:"C. Ghi nhận, hoãn xử lý, gặp sau",c:true,f:"Giảm căng thẳng, giữ thể diện."},{t:"D. Đuổi ra ngoài",c:false,f:"Mất quyền học."}]},
+            {q:"3. HS la hét, đập bàn (tiền sử tâm lý). Lớp hoảng loạn.", opts:[{t:"A. Gọi phụ huynh",c:false,f:"Chưa giải quyết nguy cơ tức thời."},{t:"B. Lại gần yêu cầu dừng",c:false,f:"Kích hoạt phản ứng tấn công."},{t:"C. Giữ khoảng cách, ổn định lớp trước",c:true,f:"An toàn là trên hết."},{t:"D. Cho lớp ra, GV ở lại",c:false,f:"Nguy hiểm cho GV."}]},
+            {q:"4. 3 HS ảnh hưởng lớn chống đối thụ động. Giải pháp?", opts:[{t:"A. Tách sang lớp khác",c:false,f:"Vi phạm hòa nhập."},{t:"B. Giao vai trò lãnh đạo nhóm",c:true,f:"Chuyển hướng quyền lực nhóm."},{t:"C. Tăng phạt",c:false,f:"Nhóm liên kết chặt hơn."},{t:"D. Thảo luận riêng từng bạn",c:false,f:"Nhóm vẫn ảnh hưởng."}]},
+            {q:"5. HS nói: 'Em không làm vì vô nghĩa'.", opts:[{t:"A. Giải thích ngay",c:false,f:"Tranh luận công khai."},{t:"B. Cho 0 điểm",c:false,f:"Tạo đối đầu."},{t:"C. Hoãn phản hồi, thảo luận quyền lựa chọn",c:true,f:"Khôi phục động lực nội tại."},{t:"D. Báo BGH",c:false,f:"Mất cơ hội."}]},
+            {q:"6. Nhóm 3 em cười nói. Nhìn nhắc không hiệu quả.", opts:[{t:"A. Phạt cả lớp",c:false,f:"Bất công."},{t:"B. Bắt xin lỗi",c:false,f:"Làm nhục."},{t:"C. Lại gần, đặt tay lên bàn, nhắc riêng",c:true,f:"Can thiệp cấp 2 hiệu quả."},{t:"D. Bỏ qua",c:false,f:"Củng cố hành vi sai."}]},
+            {q:"7. HS từng bị bắt nạt đập bàn khi bị trêu.", opts:[{t:"A. Đuổi ra",c:false,f:"Tái kích hoạt sang chấn."},{t:"B. Xử lý sau",c:false,f:"Không an toàn."},{t:"C. Tiếp cận bình tĩnh, tách ra hạ nhiệt",c:true,f:"Giảm leo thang cảm xúc."},{t:"D. Khiển trách",c:false,f:"Làm tăng bẽ mặt."}]},
+            {q:"8. HS thường xuyên không làm bài nhưng ngoan.", opts:[{t:"A. Báo phụ huynh",c:false,f:"Không trị gốc."},{t:"B. Trừ điểm",c:false,f:"Không giúp ích."},{t:"C. Trò chuyện tìm nguyên nhân",c:true,f:"Vấn đề hỗ trợ, không phải kỷ luật."},{t:"D. Bỏ qua",c:false,f:"Thông điệp sai."}]},
+            {q:"9. HS thở dài, đảo mắt khi bị nhắc.", opts:[{t:"A. Đuổi ra",c:false,f:"Thái quá."},{t:"B. Lờ đi",c:false,f:"Chấp nhận sự vô lễ."},{t:"C. Tiếp tục dạy, gặp riêng sau",c:true,f:"Cân bằng kỷ luật & quan hệ."},{t:"D. Nhắc công khai",c:false,f:"Gây chống đối."}]},
+            {q:"10. Nhóm ngồi im không làm việc.", opts:[{t:"A. Đổi nhóm",c:false,f:"Gây xáo trộn."},{t:"B. Giao vai trò cụ thể",c:true,f:"Tăng trách nhiệm."},{t:"C. Khiển trách",c:false,f:"Giảm động lực."},{t:"D. Làm cá nhân",c:false,f:"Phá vỡ hợp tác."}]},
+            {q:"11. Nghi ngờ quay cóp, không bằng chứng.", opts:[{t:"A. Cho 0 điểm",c:false,f:"Gây khiếu nại."},{t:"B. Cảnh báo công khai",c:false,f:"Xấu hổ chung."},{t:"C. Chuyển chỗ nhẹ nhàng",c:true,f:"Phòng ngừa phi trừng phạt."},{t:"D. Bỏ qua",c:false,f:"Hổng kỷ luật."}]},
+            {q:"12. HS hay phản biện, không thô lỗ.", opts:[{t:"A. Bắt im",c:false,f:"Dập tắt tư duy."},{t:"B. Đuổi ra",c:false,f:"Thái quá."},{t:"C. Ghi nhận, hẹn thảo luận sau",c:true,f:"Tôn trọng tư duy."},{t:"D. Phớt lờ",c:false,f:"HS hiểu lầm."}]},
+            {q:"13. HS buồn bã, rút lui nhiều ngày.", opts:[{t:"A. Phạt",c:false,f:"Trầm trọng thêm."},{t:"B. Quan sát, hỗ trợ tâm lý",c:true,f:"Dấu hiệu sức khỏe tinh thần."},{t:"C. Gọi phụ huynh gắt",c:false,f:"Gây áp lực."},{t:"D. Bỏ qua",c:false,f:"Bỏ sót nguy cơ."}]},
+            {q:"14. Hai HS cãi nhau to, đòi xử ngay.", opts:[{t:"A. Bắt im, dạy tiếp",c:false,f:"Xung đột âm ỉ."},{t:"B. Đuổi cả hai",c:false,f:"Quá mạnh."},{t:"C. Tách ra, hẹn xử lý riêng",c:true,f:"Hạ nhiệt, giữ thể diện."},{t:"D. Phân xử ngay",c:false,f:"Mất thời gian."}]},
+            {q:"15. Xin ra ngoài 3 lần/tiết.", opts:[{t:"A. Cấm",c:false,f:"Nguy hiểm nếu bệnh lý."},{t:"B. Tìm hiểu riêng, đặt giới hạn",c:true,f:"Xử lý theo chức năng."},{t:"C. Phê bình",c:false,f:"Mất mặt."},{t:"D. Báo phụ huynh",c:false,f:"Căng thẳng."}]},
+            {q:"16. HS từ chối chuyển chỗ.", opts:[{t:"A. Đuổi ra",c:false,f:"Mất quan hệ."},{t:"B. Quát lớn",c:false,f:"Tăng đối kháng."},{t:"C. Tạm hoãn, dạy tiếp, xử lý sau",c:true,f:"Tránh đối đầu."},{t:"D. Chuyển em khác",c:false,f:"Thất bại quản lý."}]},
+            {q:"17. Nhóm xong sớm gây ồn.", opts:[{t:"A. Khiển trách",c:false,f:"Phạt sai (HS giỏi)."},{t:"B. Giao nhiệm vụ mở rộng",c:true,f:"Giữ bận rộn tích cực."},{t:"C. Tách nhóm",c:false,f:"Phá cấu trúc."},{t:"D. Bỏ qua",c:false,f:"Lây lan ồn."}]},
+            {q:"18. HS cãi 'Cô không công bằng'.", opts:[{t:"A. Giải thích",c:false,f:"Tạo sân khấu tranh cãi."},{t:"B. Ngắt gọn, hẹn gặp sau",c:true,f:"Thoát bẫy."},{t:"C. Gọi phụ huynh",c:false,f:"Chưa cần."},{t:"D. Bắt xin lỗi",c:false,f:"Gây nhục mạ."}]},
+            {q:"19. Ném sách, nói 'Không làm nữa!'.", opts:[{t:"A. Khiển trách ngay",c:false,f:"Tăng xung đột."},{t:"B. Đuổi ra",c:false,f:"Cảm giác bị bỏ rơi."},{t:"C. Bình tĩnh, cho thời gian 'cool down'",c:true,f:"Xử lý bộc phát cảm xúc."},{t:"D. Bỏ qua",c:false,f:"Học thói quen xấu."}]},
+            {q:"20. Phụ huynh nhờ 'phạt nặng cho chừa'.", opts:[{t:"A. Từ chối thẳng",c:false,f:"Mất lòng."},{t:"B. Đồng ý",c:false,f:"Vi phạm đạo đức."},{t:"C. Giải thích hướng tích cực, phối hợp",c:true,f:"Giữ chuyên môn."},{t:"D. Né tránh",c:false,f:"Thiếu chuyên nghiệp."}]}
+        ]
+    };
+
+    // --- 3. KỸ NĂNG XÃ HỘI (SOCIAL) ---
+    const socialData = {
+        title: "Kỹ năng Xã hội",
+        theory: `
+            <div class="th1">Định nghĩa</div>
+            <p>Kỹ năng xã hội là tập hợp năng lực giúp giáo viên giao tiếp hiệu quả, xây dựng quan hệ tích cực, xử lý tình huống, hiểu cảm xúc học sinh và phối hợp tốt với phụ huynh – đồng nghiệp.</p>
+            
+            <div class="th1">Sự chuẩn bị cần thiết</div>
+            <div class="abox">
+                <b>1. Giao tiếp sư phạm:</b> Diễn đạt rõ ràng, ngôn ngữ cơ thể phù hợp, điều chỉnh theo độ tuổi.
+            </div>
+            <div class="abox">
+                <b>2. Quản lý cảm xúc:</b> Giữ bình tĩnh, nhận diện cảm xúc cá nhân, tránh phản ứng bộc phát.
+            </div>
+            <div class="abox">
+                <b>3. Giải quyết xung đột:</b> Tìm hiểu nguyên nhân, khách quan, hướng tới giáo dục (không tổn thương).
+            </div>
+            <div class="abox">
+                <b>4. Tạo động lực:</b> Khen đúng lúc, giao nhiệm vụ phù hợp, khuyến khích tiến bộ.
+            </div>
+            <div class="abox">
+                <b>5. Hợp tác & Công nghệ:</b> Chia sẻ chuyên môn, trao đổi phụ huynh đúng mực, ứng dụng công nghệ trong dạy học.
+            </div>
+        `,
+        questions: [
+            {q:"1. HS không chú ý nghe giảng. Nhắc nhở phù hợp?", opts:[{t:"A. Mắng to",c:false,f:"Tạo áp lực."},{t:"B. Nhìn và ra tín hiệu nhẹ nhàng",c:true,f:"Giúp em tự chỉnh mà không xấu hổ."},{t:"C. Đổi chỗ ngay",c:false,f:"Phản ứng quá mạnh."},{t:"D. Phớt lờ",c:false,f:"Hành vi tiếp diễn."}]},
+            {q:"2. HS quên làm bài tập lần đầu. Nên làm gì?", opts:[{t:"A. Cho 0 điểm",c:false,f:"Quá nặng."},{t:"B. Nhắc nhở và cho làm bù",c:true,f:"Mang tính giáo dục, không trừng phạt."},{t:"C. Phạt đứng",c:false,f:"Gây tiêu cực."},{t:"D. Phớt lờ",c:false,f:"Thiếu trách nhiệm."}]},
+            {q:"3. HS rụt rè, ít phát biểu. Nên?", opts:[{t:"A. Ép trả lời câu khó",c:false,f:"Gây sợ hãi."},{t:"B. Chọn câu hỏi phù hợp, khuyến khích",c:true,f:"Giúp HS tự tin dần."},{t:"C. Không gọi",c:false,f:"HS bị bỏ quên."},{t:"D. Nhờ bạn trả lời giùm",c:false,f:"Giảm tự lập."}]},
+            {q:"4. HS hỏi quá nhiều trong giờ. Nên?", opts:[{t:"A. Quát",c:false,f:"Cản trở tinh thần học."},{t:"B. Khuyến khích nhưng hướng dẫn hỏi đúng lúc",c:true,f:"Tôn trọng sự tò mò nhưng giữ trật tự."},{t:"C. Không trả lời",c:false,f:"Làm cụt hứng."},{t:"D. Bảo chờ hết giờ",c:false,f:"Cứng nhắc."}]},
+            {q:"5. Phụ huynh hỏi về con giữa sân trường. Bạn?", opts:[{t:"A. Nói qua loa",c:false,f:"Thiếu trách nhiệm."},{t:"B. Đề nghị hẹn trao đổi riêng",c:true,f:"Chuyên nghiệp, bảo mật thông tin."},{t:"C. Từ chối",c:false,f:"Cứng nhắc."},{t:"D. Kể hết mọi thứ",c:false,f:"Vi phạm quyền riêng tư."}]},
+            {q:"6. HS nhận xét 'Cô nói nhanh quá'. Bạn?", opts:[{t:"A. Gạt đi",c:false,f:"Thiếu tôn trọng."},{t:"B. Cảm ơn và điều chỉnh",c:true,f:"Lắng nghe để cải thiện."},{t:"C. Mắng vô lễ",c:false,f:"Tiêu cực."},{t:"D. Bỏ qua",c:false,f:"Thiếu tôn trọng."}]},
+            {q:"7. Lớp ồn ào. Nên?", opts:[{t:"A. Quát lớn",c:false,f:"Gây căng thẳng."},{t:"B. Dùng tín hiệu quen thuộc",c:true,f:"Giúp lớp quay lại sự chú ý nhẹ nhàng."},{t:"C. Chấm dứt tiết học",c:false,f:"Không giải quyết vấn đề."},{t:"D. Phạt ngẫu nhiên",c:false,f:"Thiếu công bằng."}]},
+            {q:"8. HS cười khi bạn nói nhầm. Bạn?", opts:[{t:"A. Giận dữ",c:false,f:"Tạo khoảng cách."},{t:"B. Cười theo và sửa lại",c:true,f:"Thái độ cởi mở, tích cực."},{t:"C. Bỏ qua",c:false,f:"Dễ gây hiểu lầm."},{t:"D. Phạt",c:false,f:"Tạo khoảng cách."}]},
+            {q:"9. HS tranh cãi khi làm nhóm. Bạn?", opts:[{t:"A. Kệ",c:false,f:"Leo thang xung đột."},{t:"B. Tách nhóm",c:false,f:"Mất mục tiêu nhóm."},{t:"C. Hướng dẫn quy tắc, phân vai rõ",c:true,f:"Giảm xung đột tận gốc."},{t:"D. Mắng cả nhóm",c:false,f:"Tăng căng thẳng."}]},
+            {q:"10. HS cảm thấy bạn thiên vị. Bạn?", opts:[{t:"A. Phớt lờ",c:false,f:"Bỏ lỡ cơ hội cải thiện."},{t:"B. Giải thích cho cả lớp",c:false,f:"Lan rộng vấn đề."},{t:"C. Lắng nghe, xem lại cách tương tác",c:true,f:"Kỹ năng tự điều chỉnh quan trọng."},{t:"D. Phạt",c:false,f:"Gây ức chế."}]},
+            {q:"11. HS nhiều lần vô lễ. Bạn?", opts:[{t:"A. Mắng nặng",c:false,f:"Tạo phản kháng."},{t:"B. Tìm hiểu nguyên nhân, trao đổi riêng",c:true,f:"Xác định nguyên nhân thật sự."},{t:"C. Gọi phụ huynh ngay",c:false,f:"Chưa phải bước đầu."},{t:"D. Bỏ qua",c:false,f:"Thiếu trách nhiệm."}]},
+            {q:"12. Phụ huynh hiểu sai, nổi nóng. Bạn?", opts:[{t:"A. Giận lại",c:false,f:"Vấn đề tệ hơn."},{t:"B. Cố giải thích ngay",c:false,f:"Họ đang nóng không nghe được."},{t:"C. Mời vào phòng riêng, bình tĩnh trình bày",c:true,f:"Không gian riêng giúp hạ nhiệt."},{t:"D. Bỏ đi",c:false,f:"Thiếu chuyên nghiệp."}]},
+            {q:"13. HS gian lận thi cử. Phản ứng?", opts:[{t:"A. Bêu tên",c:false,f:"Gây tổn thương."},{t:"B. Xử lý theo quy định kèm giải thích",c:true,f:"Công bằng, giáo dục."},{t:"C. Cho 0 điểm không giải thích",c:false,f:"Không giúp nhận lỗi."},{t:"D. Bỏ qua",c:false,f:"Hỏng kỷ luật."}]},
+            {q:"14. HS có dấu hiệu stress. Bạn?", opts:[{t:"A. Phớt lờ",c:false,f:"Bỏ lỡ cơ hội giúp."},{t:"B. Đổ lỗi lười học",c:false,f:"Thiếu hiểu biết."},{t:"C. Quan sát, trao đổi nhẹ nhàng",c:true,f:"Hỗ trợ đúng mức."},{t:"D. Báo phụ huynh ngay",c:false,f:"Gây áp lực thêm."}]},
+            {q:"15. Lớp mâu thuẫn kéo dài. Nên?", opts:[{t:"A. Tự quyết định đúng sai",c:false,f:"Áp đặt."},{t:"B. Tổ chức hòa giải nhóm",c:true,f:"Dạy kỹ năng giải quyết xung đột."},{t:"C. Bỏ qua",c:false,f:"Mâu thuẫn nặng hơn."},{t:"D. Yêu cầu BGH",c:false,f:"Chỉ khi quá nghiêm trọng."}]},
+            {q:"16. Đồng nghiệp góp ý gay gắt. Bạn?", opts:[{t:"A. Phản ứng lại",c:false,f:"Mất hòa khí."},{t:"B. Nghe, chọn lọc điều hữu ích",c:true,f:"Trưởng thành, cầu tiến."},{t:"C. Bỏ ngoài tai",c:false,f:"Bỏ lỡ cơ hội."},{t:"D. Tránh mặt",c:false,f:"Tiêu cực."}]},
+            {q:"17. Vô tình làm tổn thương HS. Bạn?", opts:[{t:"A. Không xin lỗi",c:false,f:"Mất lòng tin."},{t:"B. Xin lỗi và giải thích",c:true,f:"Chuyên nghiệp, nhân văn."},{t:"C. Để trôi qua",c:false,f:"Vấn đề còn đó."},{t:"D. Nói HS nhạy cảm quá",c:false,f:"Làm HS xấu hổ."}]},
+            {q:"18. Hai HS đánh nhau trong giờ. Bạn?", opts:[{t:"A. Gào lên",c:false,f:"Không hiệu quả."},{t:"B. Dừng lớp, can ngăn, tách HS",c:true,f:"Ưu tiên an toàn."},{t:"C. Bỏ ra ngoài gọi giám thị",c:false,f:"Nguy hiểm."},{t:"D. Phạt cả lớp",c:false,f:"Không công bằng."}]},
+            {q:"19. HS nói bị GV khác phân biệt đối xử. Bạn?", opts:[{t:"A. Tin ngay",c:false,f:"Thiếu khách quan."},{t:"B. Coi như không biết",c:false,f:"Mất niềm tin."},{t:"C. Lắng nghe, kiểm chứng, trao đổi kín",c:true,f:"Khách quan, tránh hiểu lầm."},{t:"D. Nói xấu GV kia",c:false,f:"Gây mâu thuẫn."}]},
+            {q:"20. Giải thích quyết định khó cho lớp. Cách tốt nhất?", opts:[{t:"A. Áp đặt",c:false,f:"Gây phản kháng."},{t:"B. Chỉ nói 'theo quy định'",c:false,f:"Thiếu thuyết phục."},{t:"C. Nêu lý do, cho đặt câu hỏi",c:true,f:"Minh bạch, tăng hợp tác."},{t:"D. Để tự bàn tán",c:false,f:"Nhiễu thông tin."}]}
+        ]
+    };
+
+    // --- 4. TÂM LÝ HỌC ĐƯỜNG (PSYCHOLOGY) ---
+    const psychologyData = {
+        title: "Tâm lý Học đường",
+        theory: `
+            <div class="th1">1. Định nghĩa</div>
+            <p>Lĩnh vực hỗ trợ đời sống tâm lý (cảm xúc, hành vi, học tập, quan hệ) của học sinh, giáo viên và phụ huynh trong môi trường giáo dục.</p>
+            
+            <div class="th1">2. Sự chuẩn bị</div>
+            <div class="abox">
+                <b>Học sinh:</b> Sẵn sàng chia sẻ, hiểu rằng gặp chuyên viên không phải là "bị bệnh".<br>
+                <b>Nhà trường:</b> Phòng tư vấn riêng tư, chuyên viên có chuyên môn, hệ thống phát hiện sớm.<br>
+                <b>Phụ huynh:</b> Tôn trọng, lắng nghe, không áp đặt.
+            </div>
+
+            <div class="th1">3. Thực trạng</div>
+            <ul>
+                <li><strong>Tích cực:</strong> Nhận thức tăng, nhiều trường có phòng tham vấn.</li>
+                <li><strong>Thách thức:</strong> Thiếu nhân lực, HS ngại chia sẻ, áp lực học tập/MXH tăng.</li>
+                <li><strong>Xu hướng:</strong> Trường học hạnh phúc, giáo dục cảm xúc xã hội (SEL).</li>
+            </ul>
+        `,
+        questions: [
+            {q:"1. HS bỗng im lặng, điểm giảm. Bước đầu tiên?", opts:[{t:"A. Báo phụ huynh ngay",c:false,f:"Gây lo lắng sớm."},{t:"B. Nhắc nhở tập trung",c:false,f:"Trách móc, không trị gốc."},{t:"C. Quan sát thêm, tiếp cận riêng",c:true,f:"Thu thập thông tin trước khi kết luận."},{t:"D. Chuyển chỗ",c:false,f:"Chỉ quản lý hành vi."}]},
+            {q:"2. HS chống đối nhẹ (đáp trả, không làm bài). Phản ứng?", opts:[{t:"A. Phạt ngay",c:false,f:"Tăng chống đối."},{t:"B. Bỏ qua",c:false,f:"Củng cố hành vi sai."},{t:"C. Nhắc nhở ngắn, trung tính, gặp sau",c:true,f:"Tránh leo thang, xử lý sau."},{t:"D. Gọi phụ huynh gấp",c:false,f:"Quá sớm."}]},
+            {q:"3. HS khóc khi bị nhắc nhẹ. Nên?", opts:[{t:"A. Xin lỗi trước lớp",c:false,f:"Không cần thiết."},{t:"B. Hỏi công khai",c:false,f:"Vi phạm an toàn tâm lý."},{t:"C. Cho ra ngoài hít thở, gặp riêng",c:true,f:"Giúp ổn định cảm xúc."},{t:"D. Bỏ qua",c:false,f:"Vô tâm."}]},
+            {q:"4. Nghi ngờ HS bị bắt nạt nhưng em giấu. Nên?", opts:[{t:"A. Gặng hỏi",c:false,f:"HS co lại."},{t:"B. Hỏi bạn thân",c:false,f:"Vi phạm bảo mật."},{t:"C. Gợi mở nhẹ, khẳng định sẵn sàng hỗ trợ",c:true,f:"Tạo an toàn để HS tự chia sẻ."},{t:"D. Báo BGH ngay",c:false,f:"Thiếu dữ liệu."}]},
+            {q:"5. HS yếu xin không thuyết trình vì sợ. Nên?", opts:[{t:"A. Bắt buộc làm",c:false,f:"Tăng hoảng sợ."},{t:"B. Miễn luôn",c:false,f:"Củng cố nỗi sợ."},{t:"C. Giao nhiệm vụ nhỏ, tăng dần độ khó",c:true,f:"Xây dựng tự tin từ từ."},{t:"D. Chuyển chuyên viên tâm lý",c:false,f:"GV có thể hỗ trợ trước."}]},
+            {q:"6. HS hay lơ đãng. Đánh giá nguyên nhân?", opts:[{t:"A. Kết luận lười",c:false,f:"Thiếu cơ sở."},{t:"B. Phạt kiểm điểm",c:false,f:"Không hiểu nguyên nhân."},{t:"C. Quan sát mô hình hành vi (ABC)",c:true,f:"Thời điểm, hoàn cảnh, cảm xúc."},{t:"D. Gửi lỗi cho PH",c:false,f:"Thiếu chuyên môn."}]},
+            {q:"7. Nói chuyện riêng nhiều lần. Can thiệp?", opts:[{t:"A. Tách chỗ, giải thích, theo dõi",c:true,f:"Can thiệp nhẹ phù hợp."},{t:"B. Mắng công khai",c:false,f:"Phản tác dụng."},{t:"C. Thu đồ dùng",c:false,f:"Không liên quan."},{t:"D. Gọi phụ huynh",c:false,f:"Quá nặng."}]},
+            {q:"8. Thường xuyên đi muộn. Tiếp cận?", opts:[{t:"A. Phạt đứng",c:false,f:"Hạ thấp HS."},{t:"B. Hỏi han riêng tìm hiểu",c:true,f:"Tìm nguyên nhân (ngủ muộn, gia đình)."},{t:"C. Báo BGH",c:false,f:"Quá sớm."},{t:"D. Tăng bài tập",c:false,f:"Trừng phạt sai."}]},
+            {q:"9. HS giỏi bỗng nghỉ, trễ bài. Khả năng?", opts:[{t:"A. Lười đột xuất",c:false,f:"Ít khả năng."},{t:"B. Mê điện thoại",c:false,f:"Giả định."},{t:"C. Quá tải hoặc stress",c:true,f:"Thay đổi so với bình thường là tín hiệu tâm lý."},{t:"D. Mất tôn trọng",c:false,f:"Võ đoán."}]},
+            {q:"10. Gây rối nhỏ (xoay bút, gõ bàn). Xử lý?", opts:[{t:"A. Nhắc bằng ánh mắt/tín hiệu, gặp riêng",c:true,f:"Cueing - không gián đoạn lớp."},{t:"B. Ngừng lớp răn đe",c:false,f:"Gián đoạn."},{t:"C. Gọi phụ huynh",c:false,f:"Không cần thiết."},{t:"D. Phạt đứng",c:false,f:"Quá mức."}]},
+            {q:"11. HS nổi nóng đập bàn. Đầu tiên làm gì?", opts:[{t:"A. Quát lớn",c:false,f:"Leo thang."},{t:"B. Yêu cầu im lặng, tách HS ra",c:true,f:"An toàn, trung tính."},{t:"C. Tiếp tục giảng",c:false,f:"Nguy hiểm."},{t:"D. Tìm ai sai",c:false,f:"Gây chia phe."}]},
+            {q:"12. HS nói 'Cô không hiểu em'. Phản ứng?", opts:[{t:"A. Phản bác ngay",c:false,f:"Mất lắng nghe."},{t:"B. Ghi nhận cảm xúc, hỏi thêm",c:true,f:"Tạo nền đối thoại."},{t:"C. Viết kiểm điểm",c:false,f:"Sai tâm lý."},{t:"D. Phớt lờ",c:false,f:"Bỏ qua tín hiệu."}]},
+            {q:"13. Hoàn thành bài nhưng không bao giờ phát biểu?", opts:[{t:"A. Lười",c:false,f:"Quy kết."},{t:"B. Không tôn trọng",c:false,f:"Sai."},{t:"C. Lo âu xã hội (Social Anxiety)",c:true,f:"Ngại thể hiện đám đông."},{t:"D. Không hiểu bài",c:false,f:"Đã làm bài được."}]},
+            {q:"14. HS giỏi sợ sai, cầu toàn. Giúp đỡ?", opts:[{t:"A. Giao bài khó hơn",c:false,f:"Tăng áp lực."},{t:"B. Khen hoàn hảo",c:false,f:"Củng cố cầu toàn."},{t:"C. Khen nỗ lực thay vì kết quả",c:true,f:"Giảm áp lực hoàn hảo."},{t:"D. Làm nhóm trưởng",c:false,f:"Thêm stress."}]},
+            {q:"15. Thường xuyên trốn tiết. Ưu tiên điều tra?", opts:[{t:"A. Lười học",c:false,f:"Giả định."},{t:"B. Sợ môn học/thầy cô (Avoidance)",c:true,f:"Nguyên nhân phổ biến."},{t:"C. Thiếu kỷ luật",c:false,f:"Chưa đủ."},{t:"D. Chơi game",c:false,f:"Hệ quả."}]},
+            {q:"16. Liên tục hỏi 'Đúng chưa cô?'. Dấu hiệu?", opts:[{t:"A. Thiếu tôn trọng",c:false,f:"Sai."},{t:"B. Nghiện chú ý",c:false,f:"Không hẳn."},{t:"C. Thiếu tự tin, lo âu năng lực",c:true,f:"Tín hiệu điển hình."},{t:"D. Bình thường",c:false,f:"Không bình thường nếu quá nhiều."}]},
+            {q:"17. Bị xa lánh nhưng nói 'Con ổn'. Nên?", opts:[{t:"A. Tin và thôi",c:false,f:"Bỏ qua."},{t:"B. Ép thừa nhận",c:false,f:"Kháng cự."},{t:"C. Tạo lựa chọn chia sẻ (viết/nói)",c:true,f:"Tôn trọng nhịp độ."},{t:"D. Kể cho lớp nghe",c:false,f:"Vi phạm."}]},
+            {q:"18. PH đòi giao nhiều bài để con khỏi chơi. Phản hồi?", opts:[{t:"A. Đồng ý",c:false,f:"Hại HS."},{t:"B. Từ chối ngay",c:false,f:"Gây đối đầu."},{t:"C. Giải thích tác hại, đề xuất cân bằng",c:true,f:"Chuyên môn & Hợp tác."},{t:"D. Không trả lời",c:false,f:"Thiếu chuyên nghiệp."}]},
+            {q:"19. Hay làm trò, nhưng thú nhận 'không ngồi yên được'.", opts:[{t:"A. Hư",c:false,f:"Quy kết."},{t:"B. Khả năng tăng động nhẹ (ADHD)",c:true,f:"Tín hiệu đặc trưng."},{t:"C. Nói dối",c:false,f:"Thiếu tin tưởng."},{t:"D. Gia đình",c:false,f:"Không ưu tiên."}]},
+            {q:"20. Không chắc là tâm lý hay tính cách. Nên?", opts:[{t:"A. Tự kết luận",c:false,f:"Cảm tính."},{t:"B. Bỏ qua",c:false,f:"Bỏ lỡ."},{t:"C. Trao đổi chuyên viên tâm lý kèm ghi chép",c:true,f:"Quy trình chuẩn."},{t:"D. Hỏi lớp",c:false,f:"Vi phạm."}]}
+        ]
+    };
+
+    // --- 5. LỚP HỌC ĐA VĂN HÓA (MULTI-CULTURAL) ---
+    const multiData = {
+        title: "Lớp học Đa văn hóa",
+        theory: `
+            <div class="th1">1. Định nghĩa</div>
+            <p>Lớp học đa văn hóa bao gồm học sinh từ nhiều quốc gia, dân tộc, ngôn ngữ, tôn giáo. Giáo viên cần đảm bảo sự hòa nhập và tôn trọng.</p>
+            
+            <div class="th1">2. Sự chuẩn bị</div>
+            <div class="abox">
+                <b>Kiến thức:</b> Hiểu văn hóa, phong tục, ngôn ngữ HS.<br>
+                <b>Phương pháp:</b> Linh hoạt, đa dạng, tài liệu phù hợp.<br>
+                <b>Thái độ:</b> Cởi mở, tránh định kiến, kỹ năng giao tiếp liên văn hóa.
+            </div>
+
+            <div class="th1">3. Thực trạng</div>
+            <p>Nhiều giáo viên còn thiếu kỹ năng, mang định kiến vô thức. Tuy nhiên, sự quan tâm đang tăng lên.</p>
+        `,
+        questions: [
+            {q:"1. Có HS quốc tế mới vào. Đầu tiên làm gì?", opts:[{t:"A. Giới thiệu quy tắc nhiều",c:false,f:"Gây rối."},{t:"B. Giúp làm quen môi trường, bạn bè",c:true,f:"An tâm về mặt xã hội/cảm xúc."},{t:"C. Giao bài khó",c:false,f:"Tạo áp lực."},{t:"D. Dạy bình thường",c:false,f:"Cảm giác bị bỏ rơi."}]},
+            {q:"2. HS không nhìn thẳng (do văn hóa). Bạn?", opts:[{t:"A. Ép nhìn thẳng",c:false,f:"Thiếu tôn trọng."},{t:"B. Hiểu đó là khác biệt văn hóa",c:true,f:"Tôn trọng đa dạng."},{t:"C. Báo phụ huynh",c:false,f:"Thái quá."},{t:"D. Phạt",c:false,f:"Tiêu cực."}]},
+            {q:"3. HS chưa hiểu ngôn ngữ. Nên?", opts:[{t:"A. Nói nhanh hơn",c:false,f:"Tăng rào cản."},{t:"B. Dùng hình ảnh, cử chỉ",c:true,f:"Hỗ trợ trực quan."},{t:"C. Bắt ghi chép nhiều",c:false,f:"Gây nản."},{t:"D. Cho ngồi cuối",c:false,f:"Giảm tương tác."}]},
+            {q:"4. Xung đột do hiểu lầm văn hóa. Xử lý?", opts:[{t:"A. Bỏ qua",c:false,f:"Leo thang."},{t:"B. Giải thích khác biệt, giúp trao đổi",c:true,f:"Giáo dục liên văn hóa."},{t:"C. Phạt cả hai",c:false,f:"Bất công."},{t:"D. Phạt một bên",c:false,f:"Căng thẳng."}]},
+            {q:"5. Đánh giá công bằng với HS đa văn hóa?", opts:[{t:"A. Kiểm tra y hệt 100%",c:false,f:"Bất lợi ngôn ngữ."},{t:"B. Điều chỉnh hình thức phù hợp",c:true,f:"Công bằng thực chất."},{t:"C. Cho điểm dễ",c:false,f:"Mất công bằng."},{t:"D. Cảm tính",c:false,f:"Thiên vị."}]},
+            {q:"6. HS quốc tế bị cô lập. Nên?", opts:[{t:"A. Phớt lờ",c:false,f:"Tăng cô lập."},{t:"B. Tổ chức hoạt động nhóm xen kẽ",c:true,f:"Tạo cơ hội kết nối."},{t:"C. Cho ngồi riêng",c:false,f:"Tệ hơn."},{t:"D. Nhắc tự hòa nhập",c:false,f:"Thiếu hỗ trợ."}]},
+            {q:"7. Giảng về chủ đề nhạy cảm văn hóa?", opts:[{t:"A. Bỏ qua",c:false,f:"Mất cơ hội."},{t:"B. Tạo không gian thảo luận an toàn",c:true,f:"Tôn trọng, cởi mở."},{t:"C. Tập trung 1 văn hóa",c:false,f:"Phiến diện."},{t:"D. Ép đồng ý quan điểm GV",c:false,f:"Sai sư phạm."}]},
+            {q:"8. Nộp muộn do lịch tôn giáo. Xử lý?", opts:[{t:"A. Khiển trách",c:false,f:"Thiếu nhạy cảm."},{t:"B. Linh hoạt điều chỉnh hạn",c:true,f:"Tôn trọng tôn giáo."},{t:"C. Cấm nộp",c:false,f:"Cực đoan."},{t:"D. Trừ điểm",c:false,f:"Bất lợi."}]},
+            {q:"9. HS không hiểu đùa do văn hóa. Bạn?", opts:[{t:"A. Tiếp tục",c:false,f:"Gây loại trừ."},{t:"B. Giải thích nhẹ nhàng",c:true,f:"Xây dựng quan hệ."},{t:"C. Mắng",c:false,f:"Tổn thương."},{t:"D. Tránh giao tiếp",c:false,f:"Mất cơ hội."}]},
+            {q:"10. Lớp có 5 quốc gia. Phương pháp?", opts:[{t:"A. Trung lập, đa dạng",c:true,f:"Tiếp cận số đông."},{t:"B. Theo 1 nước",c:false,f:"Thiệt thòi nhóm khác."},{t:"C. Tự điều phối",c:false,f:"Không đảm bảo."},{t:"D. Giảm bài",c:false,f:"Giảm chất lượng."}]},
+            {q:"11. Phát âm sai liên tục. Bạn?", opts:[{t:"A. Cười đùa",c:false,f:"Xấu hổ."},{t:"B. Sửa nhẹ nhàng, khích lệ",c:true,f:"Tiến bộ."},{t:"C. Bỏ qua",c:false,f:"Không cải thiện."},{t:"D. Phê bình",c:false,f:"Mất thể diện."}]},
+            {q:"12. PH quốc tế muốn họp do hiểu lầm. Bạn?", opts:[{t:"A. Từ chối",c:false,f:"Nghiêm trọng hơn."},{t:"B. Sắp xếp gặp tôn trọng",c:true,f:"Giải quyết nhanh."},{t:"C. Gửi mail ngắn",c:false,f:"Thiếu cảm thông."},{t:"D. Nhờ HS giải thích",c:false,f:"Thiếu chuyên nghiệp."}]},
+            {q:"13. Không quen làm việc nhóm. Bạn?", opts:[{t:"A. Ép tham gia",c:false,f:"Thất bại."},{t:"B. Hướng dẫn từng bước",c:true,f:"Học kỹ năng."},{t:"C. Không cho tham gia",c:false,f:"Mất cơ hội."},{t:"D. Giao bài khó",c:false,f:"Không giải quyết gốc."}]},
+            {q:"14. Dùng tiếng mẹ đẻ trong lớp. Xử lý?", opts:[{t:"A. Cấm tiệt",c:false,f:"Lo lắng."},{t:"B. Cho phép mức độ vừa phải",c:true,f:"Tôn trọng bản sắc."},{t:"C. Khuyến khích dùng luôn",c:false,f:"Giảm tiếng chung."},{t:"D. Phạt điểm",c:false,f:"Căng thẳng."}]},
+            {q:"15. Hoạt động văn hóa. Nên?", opts:[{t:"A. 1 nhóm làm hết",c:false,f:"Bất công."},{t:"B. Các nền văn hóa cùng chia sẻ",c:true,f:"Tăng hiểu biết."},{t:"C. Ưu tiên đa số",c:false,f:"Bỏ rơi thiểu số."},{t:"D. Tự làm không hỗ trợ",c:false,f:"Kém chất lượng."}]},
+            {q:"16. Sốc văn hóa. Bạn?", opts:[{t:"A. Bảo phải quen",c:false,f:"Vô cảm."},{t:"B. Lắng nghe, hỗ trợ tâm lý",c:true,f:"Giúp vượt qua."},{t:"C. Phạt",c:false,f:"Tệ hơn."},{t:"D. Không quan tâm",c:false,f:"Sai vai trò."}]},
+            {q:"17. Hiểu lầm do ngôn ngữ cơ thể. Bạn?", opts:[{t:"A. Giải thích giá trị mỗi văn hóa",c:true,f:"Tăng nhận thức."},{t:"B. Bắt làm giống nhau",c:false,f:"Phủ nhận bản sắc."},{t:"C. Tránh nhắc",c:false,f:"Không giải quyết."},{t:"D. Trách 1 bên",c:false,f:"Tăng xung đột."}]},
+            {q:"18. Gọi tên sai, HS buồn. Bạn?", opts:[{t:"A. Gọi như cũ",c:false,f:"Thiếu tôn trọng."},{t:"B. Học phát âm đúng",c:true,f:"Tôn trọng cá nhân."},{t:"C. Bảo đổi tên",c:false,f:"Thích nghi 1 chiều."},{t:"D. Gọi biệt danh",c:false,f:"Xúc phạm."}]},
+            {q:"19. Soạn bài lớp đa văn hóa. Ví dụ?", opts:[{t:"A. Từ 1 nước",c:false,f:"Khó liên hệ."},{t:"B. Đa dạng, bao hàm",c:true,f:"Dễ hiểu, kết nối."},{t:"C. Không dùng",c:false,f:"Khô cứng."},{t:"D. Phức tạp",c:false,f:"Khó hiểu."}]},
+            {q:"20. Tăng số HS quốc tế. Bạn?", opts:[{t:"A. Giữ nguyên",c:false,f:"Giảm hiệu quả."},{t:"B. Điều chỉnh chiến lược",c:true,f:"Đảm bảo chất lượng."},{t:"C. Giảm mong đợi",c:false,f:"Coi thường."},{t:"D. Không đổi",c:false,f:"Thụ động."}]}
+        ]
+    };
+
+    // ===================== LOGIC HỆ THỐNG =====================
+    
+    let currentContext = null; 
+    let qIdx = 0;
+    let currentQuestions = [];
+
+    function go(pid){
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pid).classList.add('active');
+        window.scrollTo(0,0);
+        document.getElementById('anim-scene').style.display = (pid==='p-landing') ? 'flex' : 'none';
+    }
+
+    function selectTopic(topic) {
+        if (topic === 'teaching') currentContext = teachingData;
+        else if (topic === 'discipline') currentContext = disciplineData;
+        else if (topic === 'social') currentContext = socialData;
+        else if (topic === 'psychology') currentContext = psychologyData;
+        else if (topic === 'multi') currentContext = multiData;
+        
+        document.getElementById('split-header-text').innerText = currentContext.title;
+        go('p-split');
+    }
+
+    function openGeneralTheory(group) {
+        const titles = {1: "Tâm lý lứa tuổi", 2: "Phương pháp dạy", 3: "Quản lý cảm xúc"};
+        document.getElementById('gt-title').innerText = titles[group];
+        document.getElementById('gt-body').innerHTML = generalTheoryData[group];
+        go('p-general-theory-content');
+    }
+
+    function openTopicTheory() {
+        document.getElementById('topic-theory-content').innerHTML = currentContext.theory;
+        go('p-topic-theory');
+    }
+
+    function startQuiz() {
+        currentQuestions = currentContext.questions;
+        qIdx = 0;
+        go('p-quiz');
+        loadQ();
+    }
+
+    function loadQ(){
+        const d = currentQuestions[qIdx];
+        document.getElementById('q-tag').innerText = `Câu ${qIdx+1} / ${currentQuestions.length}`;
+        document.getElementById('q-title').innerText = d.q;
+        
+        const area = document.getElementById('q-opts');
+        area.innerHTML = '';
+        document.getElementById('q-fb').style.display = 'none';
+        document.getElementById('b-ne').style.display = 'none';
+
+        // Trộn câu trả lời
+        let shuffledOpts = [...d.opts].sort(() => Math.random() - 0.5);
+
+        shuffledOpts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'btn-opt';
+            let letter = o.t.charAt(0); 
+            let displayTxt = o.t.substring(3); 
+            
+            b.innerHTML = `<div class="ltr">${letter}</div> ${displayTxt}`;
+            b.onclick = () => check(b, o, d);
+            area.appendChild(b);
+        });
+    }
+
+    function check(btn, opt, data){
+        const fb = document.getElementById('q-fb');
+        const allBtns = document.querySelectorAll('.btn-opt');
+        
+        if(opt.c === false){
+            // SAI: Đỏ, Rung, Chọn lại
+            btn.classList.add('wrong');
+            btn.disabled = true; 
+        } else {
+            // ĐÚNG: Xanh, Khóa, Hiện giải thích
+            btn.classList.add('correct');
+            allBtns.forEach(b => b.disabled = true);
+            
+            let html = `<div style="color:var(--ok);font-size:1.2em;margin-bottom:10px">✅ CHÍNH XÁC!</div>`;
+            let sortedOpts = [...data.opts].sort((a,b) => a.t.localeCompare(b.t));
+
+            sortedOpts.forEach(item => {
+                let isRight = item.c;
+                let tag = isRight ? `<span class="tag-ok">[ĐÚNG]</span>` : `<span class="tag-no">[SAI]</span>`;
+                let style = isRight ? `background:#fff; border:1px solid var(--ok); padding:5px; border-radius:5px` : ``;
+                html += `<div class="fb-item" style="${style}">${tag} <b>${item.t}</b><br>➤ ${item.f}</div>`;
+            });
+            fb.innerHTML = html;
+            fb.style.display = 'block';
+            document.getElementById('b-ne').style.display = 'block';
+        }
+    }
+
+    function nextQ(){
+        qIdx++;
+        if(qIdx < currentQuestions.length) {
+            loadQ();
+        } else {
+            alert("Chúc mừng! Bạn đã hoàn thành xuất sắc phần này.");
+            go('p-split');
+        }
+    }
+</script>
+</body>
+</html>
